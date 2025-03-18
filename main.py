@@ -1,8 +1,7 @@
 import csv
-import openmeteo_requests
-import requests_cache
-import pandas as pd
-from retry_requests import retry
+import requests
+import json
+from datetime import datetime, timedelta
 
 def load_zipcode_database(filename="zipcodes.csv"):
     zipcode_dict = {}
@@ -55,12 +54,39 @@ def getLocationInput():
             return None
 
 def main():
-    # Setup the Open-Meteo API client
-    cache_session = requests_cache.CachedSession('.cache', expire_after=3600)
-    retry_session = retry(cache_session, retries=5, backoff_factor=0.2)
-    openmeteo = openmeteo_requests.Client(session=retry_session)
     
     zipcode_db = load_zipcode_database()
+    
+    weather_codes = {
+        0: "Clear sky",
+        1: "Mainly clear",
+        2: "Partly cloudy",
+        3: "Overcast",
+        45: "Fog",
+        48: "Depositing rime fog",
+        51: "Light drizzle",
+        53: "Moderate drizzle",
+        55: "Dense drizzle",
+        56: "Light freezing drizzle",
+        57: "Dense freezing drizzle",
+        61: "Slight rain",
+        63: "Moderate rain",
+        65: "Heavy rain",
+        66: "Light freezing rain",
+        67: "Heavy freezing rain",
+        71: "Slight snow fall",
+        73: "Moderate snow fall",
+        75: "Heavy snow fall",
+        77: "Snow grains",
+        80: "Slight rain showers",
+        81: "Moderate rain showers",
+        82: "Violent rain showers",
+        85: "Slight snow showers",
+        86: "Heavy snow showers",
+        95: "Thunderstorm",
+        96: "Thunderstorm with slight hail",
+        99: "Thunderstorm with heavy hail"
+        }
     
     zipcode = getLocationInput()
     
@@ -71,37 +97,29 @@ def main():
             print(f"Location: {location_data['display_name']}")
             print(f"Coordinates: {location_data['lat']}, {location_data['lng']}")
             
-            print(f"Getting basic forecast for {location_data['display_name']}...")
+            print(f"7-day forecast:")
             
             url = "https://api.open-meteo.com/v1/forecast"
             params = {
-                "latitude": location_data['lat'],
-                "longitude": location_data['lng'],
-                "timezone": location_data['timezone'],
-                "forecast_days": 7,
-                "hourly": "weather_code"  # Added hourly parameter
-            }
+            "latitude": location_data['lat'],
+            "longitude": location_data['lng'],
+            "timezone": location_data['timezone'],
+            "forecast_days": 7,
+            "hourly": "weather_code,temperature_2m,precipitation_probability,windspeed_10m"
+}
             
-            responses = openmeteo.weather_api(url, params=params)
-            response = responses[0]
-            print(f"Coordinates {response.Latitude()}°N {response.Longitude()}°E")
-            print(f"Elevation {response.Elevation()} m asl")
-            print(f"Timezone {response.Timezone()}{response.TimezoneAbbreviation()}")
-            print(f"Timezone difference to GMT+0 {response.UtcOffsetSeconds()} s")
-            hourly = response.Hourly()
-            hourly_weather_code = hourly.Variables(0).ValuesAsNumpy()
-
-            hourly_data = {"date": pd.date_range(
-                start = pd.to_datetime(hourly.Time(), unit = "s", utc = True),
-                end = pd.to_datetime(hourly.TimeEnd(), unit = "s", utc = True),
-                freq = pd.Timedelta(seconds = hourly.Interval()),
-                inclusive = "left"
-            )}
+            response = requests.get(url, params=params)
+            body = response.text
+            body_dict = json.loads(body)
+            if response.status_code == 200:
+                try:
+                    print(body_dict)
+                    
+                except ValueError:
+                    print("response is not valid JSON")
+            else:
+                print(f"Request failed with status code: {response.status_code}")
             
-            hourly_data["weather_code"] = hourly_weather_code  # Fixed indentation
-
-            hourly_dataframe = pd.DataFrame(data = hourly_data)
-            print(hourly_dataframe)
         else:
             print("Could not find coordinates for this zipcode.")
     else:
