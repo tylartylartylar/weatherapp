@@ -1,4 +1,7 @@
 import csv
+import urllib.request
+import urllib.parse
+import json
 
 def load_zipcode_database(filename="zipcodes.csv"):
     zipcode_dict = {}
@@ -61,6 +64,8 @@ def main():
             print(f"Coordinates: {location_data['lat']}, {location_data['lng']}")
             
             print(f"Getting basic forecast for {location_data['display_name']}...")
+            #url for 61554 is https://api.open-meteo.com/v1/forecast?latitude=40.54441&longitude=-89.62181&hourly=temperature_2m
+            weatherURL = f"https://api.open-meteo.com/v1/forecast?latitude={location_data['lat']}&longitude={location_data['lon']}&hourly=temperature_2m,precipitation,windspeed,humidity"
             
             
         else:
