@@ -1,5 +1,6 @@
 # weatherapp
 
-Use a free weather API to fetch data for a location
-Parse JSON responses and present weather information
-Add features like forecasts or weather alerts
+## Using Open-Meteo Weather API
+- Provides a brief overview of weather and forecast for the users region
+- More detailed reports for sunrise and set times for each day
+- Provides an index value for the user's preferred "Perfect weather" 
