@@ -1,7 +1,8 @@
 import csv
-import urllib.request
-import urllib.parse
-import json
+import openmeteo_requests
+import requests_cache
+import pandas as pd
+from retry_requests import retry
 
 def load_zipcode_database(filename="zipcodes.csv"):
     zipcode_dict = {}
@@ -15,7 +16,8 @@ def load_zipcode_database(filename="zipcodes.csv"):
                     'lng': float(row['lng']),
                     'city': row['city'],
                     'state_id': row['state_id'],
-                    'state_name': row['state_name']
+                    'state_name': row['state_name'],
+                    'timezone': row['timezone']
                 }
         print(f"Loaded {len(zipcode_dict)} zipcodes from database.")
         return zipcode_dict
@@ -32,7 +34,8 @@ def get_coords_from_zip(zipcode, zipcode_db):
         return {
             'lat': data['lat'],
             'lng': data['lng'],
-            'display_name': f"{data['city']}, {data['state_id']}"
+            'display_name': f"{data['city']}, {data['state_id']}",
+            'timezone': data['timezone']  # Added timezone here
         }
     
     print(f"Zipcode {zipcode} not found in database.")
@@ -52,6 +55,11 @@ def getLocationInput():
             return None
 
 def main():
+    # Setup the Open-Meteo API client
+    cache_session = requests_cache.CachedSession('.cache', expire_after=3600)
+    retry_session = retry(cache_session, retries=5, backoff_factor=0.2)
+    openmeteo = openmeteo_requests.Client(session=retry_session)
+    
     zipcode_db = load_zipcode_database()
     
     zipcode = getLocationInput()
@@ -64,10 +72,36 @@ def main():
             print(f"Coordinates: {location_data['lat']}, {location_data['lng']}")
             
             print(f"Getting basic forecast for {location_data['display_name']}...")
-            #url for 61554 is https://api.open-meteo.com/v1/forecast?latitude=40.54441&longitude=-89.62181&hourly=temperature_2m
-            weatherURL = f"https://api.open-meteo.com/v1/forecast?latitude={location_data['lat']}&longitude={location_data['lon']}&hourly=temperature_2m,precipitation,windspeed,humidity"
             
+            url = "https://api.open-meteo.com/v1/forecast"
+            params = {
+                "latitude": location_data['lat'],
+                "longitude": location_data['lng'],
+                "timezone": location_data['timezone'],
+                "forecast_days": 7,
+                "hourly": "weather_code"  # Added hourly parameter
+            }
             
+            responses = openmeteo.weather_api(url, params=params)
+            response = responses[0]
+            print(f"Coordinates {response.Latitude()}°N {response.Longitude()}°E")
+            print(f"Elevation {response.Elevation()} m asl")
+            print(f"Timezone {response.Timezone()}{response.TimezoneAbbreviation()}")
+            print(f"Timezone difference to GMT+0 {response.UtcOffsetSeconds()} s")
+            hourly = response.Hourly()
+            hourly_weather_code = hourly.Variables(0).ValuesAsNumpy()
+
+            hourly_data = {"date": pd.date_range(
+                start = pd.to_datetime(hourly.Time(), unit = "s", utc = True),
+                end = pd.to_datetime(hourly.TimeEnd(), unit = "s", utc = True),
+                freq = pd.Timedelta(seconds = hourly.Interval()),
+                inclusive = "left"
+            )}
+            
+            hourly_data["weather_code"] = hourly_weather_code  # Fixed indentation
+
+            hourly_dataframe = pd.DataFrame(data = hourly_data)
+            print(hourly_dataframe)
         else:
             print("Could not find coordinates for this zipcode.")
     else:
