@@ -34,7 +34,7 @@ def get_coords_from_zip(zipcode, zipcode_db):
             'lat': data['lat'],
             'lng': data['lng'],
             'display_name': f"{data['city']}, {data['state_id']}",
-            'timezone': data['timezone']  # Added timezone here
+            'timezone': data['timezone']
         }
     
     print(f"Zipcode {zipcode} not found in database.")
@@ -111,19 +111,36 @@ def main():
             response = requests.get(url, params=params)
             body = response.text
             body_dict = json.loads(body)
+            days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
             if response.status_code == 200:
                 try:
                     temp_list = body_dict['hourly']['temperature_2m']
                     cond_list = body_dict['hourly']['weather_code']
                     times = body_dict['hourly']['time']
 
+                    # Group forecasts by day
+                    current_day = None
+                    
                     for i in range(len(times)):
                         code = cond_list[i]
                         temp = (temp_list[i] * 9/5) + 32
-                        time = times[i]
+                        time_str = times[i]
                         cond = weather_codes[code]
-
-                        print(f"At {time} it will be {cond} and {temp:.1f} degrees\n")
+                        
+                        dateTimeObj = datetime.fromisoformat(time_str)
+                        date_only = dateTimeObj.date()
+                        day_of_month = dateTimeObj.day
+                        weekday_number = date_only.weekday()
+                        weekday_name = days[weekday_number]
+                        time_display = dateTimeObj.strftime("%I:%M %p")
+                        
+                        # Print the day header when we reach a new day
+                        if current_day != date_only:
+                            current_day = date_only
+                            print(f"\n{weekday_name} the {day_of_month}th:")
+                        
+                        # Print the forecast line
+                        print(f"{time_display} {cond} {temp:.1f}°F")
                     
                 except ValueError:
                     print("response is not valid JSON")
