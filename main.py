@@ -113,7 +113,17 @@ def main():
             body_dict = json.loads(body)
             if response.status_code == 200:
                 try:
-                    print(body_dict)
+                    temp_list = body_dict['hourly']['temperature_2m']
+                    cond_list = body_dict['hourly']['weather_code']
+                    times = body_dict['hourly']['time']
+
+                    for i in range(len(times)):
+                        code = cond_list[i]
+                        temp = (temp_list[i] * 9/5) + 32
+                        time = times[i]
+                        cond = weather_codes[code]
+
+                        print(f"At {time} it will be {cond} and {temp:.1f} degrees\n")
                     
                 except ValueError:
                     print("response is not valid JSON")
