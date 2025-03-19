@@ -2,6 +2,8 @@ import csv
 import requests
 import json
 from datetime import datetime, timedelta
+import matplotlib.pyplot as plot
+import time
 
 def load_zipcode_database(filename="zipcodes.csv"):
     zipcode_dict = {}
@@ -116,15 +118,17 @@ def main():
                 try:
                     temp_list = body_dict['hourly']['temperature_2m']
                     cond_list = body_dict['hourly']['weather_code']
-                    times = body_dict['hourly']['time']
+                    api_times = body_dict['hourly']['time']
 
-                    # Group forecasts by day
                     current_day = None
+                    times_list = []
+                    temperatures = []
+                    day_markers = []
                     
-                    for i in range(len(times)):
+                    for i in range(len(api_times)):
                         code = cond_list[i]
                         temp = (temp_list[i] * 9/5) + 32
-                        time_str = times[i]
+                        time_str = api_times[i]
                         cond = weather_codes[code]
                         
                         dateTimeObj = datetime.fromisoformat(time_str)
@@ -134,14 +138,60 @@ def main():
                         weekday_name = days[weekday_number]
                         time_display = dateTimeObj.strftime("%I:%M %p")
                         
-                        # Print the day header when we reach a new day
+                        formatted_label = f"{weekday_name} {time_display}"
+                        times_list.append(formatted_label)
+                        temperatures.append(temp)
+                        
+                        if dateTimeObj.hour == 6 and dateTimeObj.minute == 0:
+                            day_markers.append(i)
+                        
                         if current_day != date_only:
                             current_day = date_only
                             print(f"\n{weekday_name} the {day_of_month}th:")
                         
-                        # Print the forecast line
                         print(f"{time_display} {cond} {temp:.1f}°F")
                     
+                    plot.figure(figsize=(12, 6))
+                    plot.plot(temperatures)
+                    plot.xlabel("Time")
+                    plot.ylabel("Temperature")
+                    plot.title(f"7-day Temp Forecast for {location_data['display_name']}")
+                    
+                    for marker in day_markers:
+                        dateTimeObj = datetime.fromisoformat(api_times[marker])
+                        weekday = dateTimeObj.strftime("%a")
+                        plot.axvline(marker, color='gray', linestyle='--', alpha=0.7)
+                        plot.text(marker, min(temperatures), weekday, ha='center', va='bottom')
+                    
+                    # Add vertical lines at important times of day (every 4 hours)
+                    important_hours = [6, 10, 14, 18, 22]  # 6am, 10am, 2pm, 6pm, 10pm
+                    for i, time_str in enumerate(api_times):
+                        dateTimeObj = datetime.fromisoformat(time_str)
+                        if dateTimeObj.hour in important_hours and dateTimeObj.minute == 0:
+                            # Use different colors based on time of day
+                            if dateTimeObj.hour == 6:  # Morning
+                                line_color = 'orange'
+                            elif dateTimeObj.hour in [10, 14]:  # Midday
+                                line_color = 'gold'
+                            else:  # Evening
+                                line_color = 'purple'
+                            
+                            plot.axvline(i, color=line_color, linestyle=':', alpha=0.4)
+                            # Optional: Add small time marker
+                            time_label = dateTimeObj.strftime("%-I%p").lower()
+                            plot.text(i, min(temperatures) + 2, time_label, ha='center', va='bottom', fontsize=8, alpha=0.7)
+                    
+                    n = 12
+                    positions = range(0, len(times_list), n)
+                    labels = [times_list[i] for i in positions]
+                    plot.xticks(positions, labels, rotation=45)
+                    
+                    plot.tight_layout()
+                    plot.grid(True, alpha=0.3)
+                    plot.show()
+                    time.sleep(120)
+                    plot.close('all')
+                        
                 except ValueError:
                     print("response is not valid JSON")
             else:
