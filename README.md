@@ -1,5 +1,3 @@
-Here's the raw markdown text for the README:
-
 # Weather App
 
 A Python application for retrieving and displaying weather forecasts using the Open-Meteo API.
