@@ -1,6 +1,5 @@
 Here's the raw markdown text for the README:
 
-```markdown
 # Weather App
 
 A Python application for retrieving and displaying weather forecasts using the Open-Meteo API.
@@ -104,5 +103,3 @@ Edit `utils/config.py` to modify:
 
 - Weather data provided by [Open-Meteo](https://open-meteo.com/)
 - Zipcode database sourced from [Simple Maps](https://simplemaps.com/data/us-zips)
-
-```
