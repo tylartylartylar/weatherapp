@@ -7,6 +7,7 @@ from utils.location import load_zipcode_database, get_coords_from_zip, getLocati
 from forecasts.weekly import display_weekly_forecast
 from forecasts.extended import display_extended_forecast
 from forecasts.daily import display_day_forecast
+from utils.config import ZIPCODE
 
 def main():
     # Load zipcode database

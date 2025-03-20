@@ -2,6 +2,8 @@
 Configuration settings for the weather application.
 """
 
+ZIPCODE = "61554"
+
 WEATHER_CODES = {
         0: "Clear sky",
         1: "Mainly clear",
