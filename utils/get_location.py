@@ -20,7 +20,7 @@ def load_zipcode_database(filename="utils/zipcodes.csv"):
                     'state_name': row['state_name'],
                     'timezone': row['timezone']
                 }
-        print(f"Loaded {len(zipcode_dict)} zipcodes from database.")
+        print(f"Loaded {len(zipcode_dict)} locations from database.")
         return zipcode_dict
     except FileNotFoundError:
         print(f"Error: Could not find {filename}")
