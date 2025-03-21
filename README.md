@@ -2,39 +2,6 @@
 
 A Python application for retrieving and displaying weather forecasts using the Open-Meteo API.
 
-## Overview
-
-This application allows users to check weather forecasts for any location in the United States using zipcode input. The app supports various forecast types including:
-
-- Current weather conditions
-- Daily forecasts
-- Weekly (7-day) forecasts
-- Extended (14-day) forecasts
-
-## Project Structure
-
-```
-weatherapp/
-├── forecasts/
-│   ├── current.py     # Current weather display
-│   ├── daily.py       # Daily forecast display
-│   ├── extended.py    # 14-day forecast display
-│   └── weekly.py      # 7-day forecast display
-├── models/
-│   ├── location.py    # Location data structures
-│   └── weather.py     # Weather data structures
-├── utils/
-│   ├── config.py      # Configuration settings
-│   ├── display.py     # Formatting and display utilities
-│   ├── location.py    # Zipcode and location utilities
-│   ├── weather_api.py # API interaction functions
-│   └── zipcodes.csv   # Zipcode database
-├── .gitignore
-├── README.md
-├── main.py            # Application entry point
-└── requirements.txt   # Dependencies
-```
-
 ## Features
 
 - Lookup location data by zipcode
@@ -72,7 +39,7 @@ python main.py
 
 Follow the prompts to:
 1. Enter a zipcode
-2. Choose a forecast type (extended, weekly, or daily)
+2. Displays debug and basic summary of today's weather.
 
 ## API Integration
 
