@@ -19,7 +19,21 @@ class Location:
         timezone = location_dict['timezone']
 
         return cls(lat,lng,city,state,display_name, timezone)
-
+    
+    @classmethod
+    def from_zipcode(cls, zipcode, zipcode_db):
+        for entry in zipcode_db:
+            if entry.get('zip') == zipcode:
+                
+                return cls(
+                    lat = float(entry.get('lat', 0)),
+                    lng = float(entry.get('lng', 0)),
+                    city = entry.get('city', ''),
+                    state = entry.get('state_id', ''),
+                    display_name = display_name,
+                    timezone = entry.get('timezone', 'america/chicago'),
+                )
+        return None
 
     def to_dict(self):
         return {

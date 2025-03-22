@@ -54,3 +54,4 @@ def getLocationInput():
         else:
             print(f"Supplied zipcode invalid length... Maybe go outside to check the weather until I can implement search by city/state")
             return None
+        
